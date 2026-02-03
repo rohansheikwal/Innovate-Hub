@@ -1,0 +1,154 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Innocascade - Share Ideas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <div class="logo-text">Innocascade</div>
+            </div>
+            <div class="nav-links">
+                <a href="index.php">Home</a>
+                <a href="about.html">About</a>
+                <a href="share_ideas.html" class="text-orange-500">Share Ideas</a>
+                <a href="chat.html">Chat</a>
+                <a href="explore_ideas.html">Explore Ideas</a>
+                <a href="leaderboard.html">Leaderboard</a>
+                <a href="profile.html">Profile</a>
+                <a href="admin.html" id="admin-link" class="hidden">Admin</a>
+                <a href="auth.html#login" id="auth-link">Login</a>
+            </div>
+            <div class="hamburger">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </nav>
+        <div class="mobile-menu" id="mobile-menu">
+            <a href="index.php">Home</a>
+            <a href="about.html">About</a>
+            <a href="share_ideas.html" class="text-orange-500">Share Ideas</a>
+            <a href="chat.html">Chat</a>
+            <a href="explore_ideas.html">Explore Ideas</a>
+            <a href="leaderboard.html">Leaderboard</a>
+            <a href="profile.html">Profile</a>
+            <a href="admin.html" id="mobile-admin-link" class="hidden">Admin</a>
+            <a href="auth.html#login" id="mobile-auth-link">Login</a>
+        </div>
+    </header>
+
+    <section class="min-h-screen py-16 bg-gray-900">
+        <div class="container">
+            <h1 class="text-3xl md:text-4xl font-bold text-center mb-12 gradient-text fade-in">Share Your Idea</h1>
+            <div class="form-card max-w-lg mx-auto p-8 fade-in">
+                <form id="idea-form" class="space-y-6">
+                    <input type="hidden" name="csrf_token" id="idea-csrf-token">
+                    <div class="input-group">
+                        <input type="text" name="title" id="idea-title" required class="input-field" placeholder="Idea Title">
+                        <i class="fas fa-lightbulb absolute top-3 left-3 text-gray-400"></i>
+                    </div>
+                    <div class="input-group">
+                        <textarea name="description" id="idea-description" required class="input-field" placeholder="Describe your idea..." rows="5"></textarea>
+                        <i class="fas fa-comment absolute top-3 left-3 text-gray-400"></i>
+                    </div>
+                    <div class="input-group">
+                        <select name="category" id="idea-category" required class="input-field">
+                            <option value="" disabled selected>Select Category</option>
+                            <option value="hospitality">Hospitality</option>
+                            <option value="finance">Financial Services</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="retail">Retail</option>
+                        </select>
+                        <i class="fas fa-tags absolute top-3 left-3 text-gray-400"></i>
+                    </div>
+                    <div class="file-upload">
+                        <label for="idea-file" class="cursor-pointer"><i class="fas fa-upload mr-2"></i>Upload File</label>
+                        <input type="file" name="file" id="idea-file" accept="image/*,application/pdf">
+                        <p id="idea-file-name" class="file-name"></p>
+                    </div>
+                    <button type="submit" class="w-full gradient-button text-white py-3 rounded-lg font-semibold">
+                        <span>Submit Idea</span>
+                        <i class="fas fa-spinner fa-spin ml-2 hidden"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <p>© 2025 Innocascade. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="index.php">Home</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+            </div>
+            <div class="social-icons">
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <div id="notification" class="notification hidden"></div>
+
+    <script src="js/scripts.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const isAuthenticated = checkAuth();
+            if (!isAuthenticated) {
+                window.location.href = 'auth.html#login';
+                return;
+            }
+
+            document.getElementById('idea-file').addEventListener('change', (e) => {
+                const fileName = e.target.files[0]?.name || '';
+                document.getElementById('idea-file-name').textContent = fileName;
+            });
+
+            document.getElementById('idea-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const form = e.target;
+                const button = form.querySelector('button');
+                const spinner = button.querySelector('.fa-spinner');
+                button.disabled = true;
+                spinner.classList.remove('hidden');
+
+                const formData = new FormData(form);
+                try {
+                    const response = await fetch('backend/ideas/share_idea.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    showNotification(data.message, data.success ? 'success' : 'error');
+                    if (data.success) {
+                        form.reset();
+                        document.getElementById('idea-file-name').textContent = '';
+                    }
+                } catch (error) {
+                    showNotification('Failed to submit idea.', 'error');
+                } finally {
+                    button.disabled = false;
+                    spinner.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+```

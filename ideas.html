@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InnovateHub - Ideas</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <nav class="navbar sticky">
+    <div class="container">
+      <a href="index.html" class="logo">InnovateHub</a>
+      <div class="nav-toggle"><i class="fas fa-bars"></i></div>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="ideas.html" class="active">Ideas</a></li>
+        <li><a href="chat.html">Chat</a></li>
+        <li><a href="collaborate.html">Collaborate</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><a href="login.html">Login</a></li>
+        <li><a href="signup.html">Signup</a></li>
+        <li><a href="php/logout.php">Logout</a></li>
+      </ul>
+      <div class="theme-toggle">
+        <i class="fas fa-sun"></i>
+        <i class="fas fa-moon"></i>
+      </div>
+    </div>
+  </nav>
+
+  <section class="container">
+    <h2>Share Your Idea</h2>
+    <form id="idea-form" class="form-container">
+      <div class="form-group">
+        <input type="text" name="title" id="title" placeholder=" " required>
+        <label for="title">Idea Title</label>
+      </div>
+      <div class="form-group">
+        <select name="sector" id="sector" required>
+          <option value="">Select Sector</option>
+          <option value="Hospitality">Hospitality</option>
+          <option value="Financial Services">Financial Services</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Retail">Retail</option>
+        </select>
+        <label for="sector">Sector</label>
+      </div>
+      <div class="form-group">
+        <textarea name="description" id="description" placeholder=" " required></textarea>
+        <label for="description">Description</label>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit Idea</button>
+    </form>
+
+    <h2>All Ideas</h2>
+    <div class="form-group">
+      <select id="sector-filter">
+        <option value="">All Sectors</option>
+        <option value="Hospitality">Hospitality</option>
+        <option value="Financial Services">Financial Services</option>
+        <option value="Entertainment">Entertainment</option>
+        <option value="Retail">Retail</option>
+      </select>
+      <label for="sector-filter">Filter by Sector</label>
+    </div>
+    <div class="idea-grid" id="idea-grid"></div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2025 InnovateHub. Developed by Ravi Ranjan, Sahil Bhardwaj, Ritika, Rohan Yadav.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const ideaForm = document.querySelector('#idea-form');
+      const ideaGrid = document.querySelector('#idea-grid');
+      const sectorFilter = document.querySelector('#sector-filter');
+
+      // Load Ideas
+      async function loadIdeas() {
+        const sector = sectorFilter.value;
+        try {
+          const response = await fetch(`php/submit_idea.php?action=get_ideas${sector ? `&sector=${sector}` : ''}`);
+          const ideas = await response.json();
+          ideaGrid.innerHTML = '';
+          ideas.forEach(idea => {
+            const div = document.createElement('div');
+            div.className = `idea-card ${idea.sector.toLowerCase().replace(' ', '-')}`;
+            div.innerHTML = `
+              <h3>${idea.title}</h3>
+              <p><strong>Sector:</strong> ${idea.sector}</p>
+              <p>${idea.description}</p>
+              <p><strong>By:</strong> ${idea.username}</p>
+              <form class="review-form" data-idea-id="${idea.id}">
+                <div class="form-group">
+                  <select name="rating" required>
+                    <option value="">Rate (1-5)</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                  </select>
+                  <label>Rating</label>
+                </div>
+                <div class="form-group">
+                  <textarea name="comment" placeholder=" "></textarea>
+                  <label>Comment</label>
+                </div>
+                <button type="submit" class="btn btn-accent">Submit Review</button>
+              </form>
+              <button class="btn btn-primary collaborate-btn" data-idea-id="${idea.id}">Request Collaboration</button>
+            `;
+            ideaGrid.appendChild(div);
+          });
+
+          // Attach Review Form Handlers
+          document.querySelectorAll('.review-form').forEach(form => {
+            form.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const formData = new FormData(form);
+              formData.append('idea_id', form.dataset.ideaId);
+              try {
+                const response = await fetch('php/review_idea.php', {
+                  method: 'POST',
+                  body: formData
+                });
+                const result = await response.json();
+                showPopup(result.message, result.status === 'success');
+                if (result.status === 'success') form.reset();
+              } catch (error) {
+                showPopup('Failed to submit review.', false);
+              }
+            });
+          });
+
+          // Attach Collaboration Handlers
+          document.querySelectorAll('.collaborate-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const formData = new FormData();
+              formData.append('idea_id', btn.dataset.ideaId);
+              try {
+                const response = await fetch('php/collaborate.php?action=request_collaboration', {
+                  method: 'POST',
+                  body: formData
+                });
+                const result = await response.json();
+                showPopup(result.message, result.status === 'success');
+              } catch (error) {
+                showPopup('Failed to request collaboration.', false);
+              }
+            });
+          });
+        } catch (error) {
+          showPopup('Failed to load ideas.', false);
+        }
+      }
+
+      // Submit Idea
+      if (ideaForm) {
+        ideaForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const formData = new FormData(ideaForm);
+          try {
+            const response = await fetch('php/submit_idea.php', {
+              method: 'POST',
+              body: formData
+            });
+            const result = await response.json();
+            showPopup(result.message, result.status === 'success');
+            if (result.status === 'success') {
+              ideaForm.reset();
+              loadIdeas();
+            }
+          } catch (error) {
+            showPopup('Failed to submit idea.', false);
+          }
+        });
+      }
+
+      sectorFilter.addEventListener('change', loadIdeas);
+      loadIdeas();
+    });
+  </script>
+</body>
+</html>

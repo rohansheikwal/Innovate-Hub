@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InnovateHub - Login</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <nav class="navbar sticky">
+    <div class="container">
+      <a href="index.html" class="logo">InnovateHub</a>
+      <div class="nav-toggle"><i class="fas fa-bars"></i></div>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="ideas.html">Ideas</a></li>
+        <li><a href="chat.html">Chat</a></li>
+        <li><a href="collaborate.html">Collaborate</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><a href="login.html" class="active">Login</a></li>
+        <li><a href="signup.html">Signup</a></li>
+        <li><a href="php/logout.php">Logout</a></li>
+      </ul>
+      <div class="theme-toggle">
+        <i class="fas fa-sun"></i>
+        <i class="fas fa-moon"></i>
+      </div>
+    </div>
+  </nav>
+
+  <section class="form-container">
+    <h2>Login</h2>
+    <form id="login-form">
+      <div class="form-group">
+        <input type="email" name="email" id="email" placeholder=" " required>
+        <label for="email">Email</label>
+      </div>
+      <div class="form-group">
+        <input type="password" name="password" id="password" placeholder=" " required>
+        <label for="password">Password</label>
+      </div>
+      <button type="submit" class="btn btn-primary">Login</button>
+      <p><a href="forgot_password.html">Forgot Password?</a></p>
+    </form>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2025 InnovateHub. Developed by Ravi Ranjan, Sahil Bhardwaj, Ritika, Rohan Yadav.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

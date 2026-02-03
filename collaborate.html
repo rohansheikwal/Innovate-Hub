@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InnovateHub - Collaborate</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <nav class="navbar sticky">
+    <div class="container">
+      <a href="index.html" class="logo">InnovateHub</a>
+      <div class="nav-toggle"><i class="fas fa-bars"></i></div>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="ideas.html">Ideas</a></li>
+        <li><a href="chat.html">Chat</a></li>
+        <li><a href="collaborate.html" class="active">Collaborate</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><a href="login.html">Login</a></li>
+        <li><a href="signup.html">Signup</a></li>
+        <li><a href="php/logout.php">Logout</a></li>
+      </ul>
+      <div class="theme-toggle">
+        <i class="fas fa-sun"></i>
+        <i class="fas fa-moon"></i>
+      </div>
+    </div>
+  </nav>
+
+  <section class="container">
+    <h2>Collaboration Requests</h2>
+    <div id="collaboration-grid" class="idea-grid"></div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2025 InnovateHub. Developed by Ravi Ranjan, Sahil Bhardwaj, Ritika, Rohan Yadav.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const collaborationGrid = document.querySelector('#collaboration-grid');
+
+      // Load Collaboration Requests
+      async function loadRequests() {
+        try {
+          const response = await fetch('php/collaborate.php?action=get_requests');
+          const requests = await response.json();
+          collaborationGrid.innerHTML = '';
+          requests.forEach(req => {
+            const div = document.createElement('div');
+            div.className = 'idea-card';
+            div.innerHTML = `
+              <h3>${req.title}</h3>
+              <p><strong>Requested by:</strong> ${req.username}</p>
+              <p><strong>Status:</strong> ${req.status}</p>
+              ${req.status === 'Pending' ? `
+                <button class="btn btn-primary accept-btn" data-id="${req.id}">Accept</button>
+                <button class="btn btn-accent reject-btn" data-id="${req.id}">Reject</button>
+              ` : ''}
+            `;
+            collaborationGrid.appendChild(div);
+          });
+
+          // Attach Button Handlers
+          document.querySelectorAll('.accept-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const formData = new FormData();
+              formData.append('collaboration_id', btn.dataset.id);
+              formData.append('status', 'Accepted');
+              try {
+                const response = await fetch('php/collaborate.php?action=update_status', {
+                  method: 'POST',
+                  body: formData
+                });
+                const result = await response.json();
+                showPopup(result.message, result.status === 'success');
+                loadRequests();
+              } catch (error) {
+                showPopup('Failed to update collaboration.', false);
+              }
+            });
+          });
+
+          document.querySelectorAll('.reject-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const formData = new FormData();
+              formData.append('collaboration_id', btn.dataset.id);
+              formData.append('status', 'Rejected');
+              try {
+                const response = await fetch('php/collaborate.php?action=update_status', {
+                  method: 'POST',
+                  body: formData
+                });
+                const result = await response.json();
+                showPopup(result.message, result.status === 'success');
+                loadRequests();
+              } catch (error) {
+                showPopup('Failed to update collaboration.', false);
+              }
+            });
+          });
+        } catch (error) {
+          showPopup('Failed to load collaboration requests.', false);
+        }
+      }
+
+      loadRequests();
+    });
+  </script>
+</body>
+</html>
